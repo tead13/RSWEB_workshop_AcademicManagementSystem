@@ -1,8 +1,28 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
+﻿<div class="text-center">
+    <h1 class="display-4 mb-4">
+        Welcome to my project<br />
+        <strong>Academic Management System</strong>
+    </h1>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <p class="mb-5">
+        Choose where you want to navigate.
+    </p>
+
+    <div class="d-flex justify-content-center gap-4 mt-4">
+        <a asp-controller="Courses" asp-action="Index"
+           class="btn btn-outline-primary btn-lg px-4">
+            Courses
+        </a>
+
+        <a asp-controller="Students" asp-action="Index"
+           class="btn btn-outline-secondary btn-lg px-4">
+            Students
+        </a>
+
+        <a asp-controller="Teachers" asp-action="Index"
+           class="btn btn-outline-info btn-lg px-4">
+            Teachers
+        </a>
+    </div>
+
 </div>
