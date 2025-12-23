@@ -1,0 +1,35 @@
+﻿@model IEnumerable<AcademicManagementSystem.Models.Course>
+
+@{
+    ViewData["Title"] = "Courses by Teacher";
+}
+
+<h1>Courses by Teacher</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Semester</th>
+            <th>Programme</th>
+            <th>First Teacher</th>
+            <th>Second Teacher</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Title</td>
+                <td>@item.Semester</td>
+                <td>@item.Programme</td>
+                <td>
+                    @(item.FirstTeacher == null ? "-" : item.FirstTeacher.FullName)
+                </td>
+                <td>
+                    @(item.SecondTeacher == null ? "-" : item.SecondTeacher.FullName)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

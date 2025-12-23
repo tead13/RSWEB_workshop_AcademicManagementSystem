@@ -1,0 +1,144 @@
+﻿@* Ovoj View raboti so EditCourseVM, Ne so Course direktno!*@
+@using AcademicManagementSystem.Models
+@model AcademicManagementSystem.ViewModels.EditCourseVM
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit Course</h1>
+<hr />
+
+@* FORM – prakja POST Edit *@
+<form asp-action="Edit" method="post">
+
+    @* Skrieno pole so CourseId, POST Edit go koristi za da znae koj predmet se menuva *@
+    <input type="hidden" asp-for="CourseId" />
+
+    @* Prikaz na validaciski greski *@
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    @* COURSE DATA osnovni info*@
+
+    <div class="form-group">
+        @* Label za Title *@
+        <label asp-for="Title" class="control-label"></label>
+
+        @* Input pole za Title *@
+        <input asp-for="Title" class="form-control" />
+
+        @* Poraka za validacija *@
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    @* Ako gi dodadam vo EditCourseVM i Credits, Semester, Programme isto tak ai tuka bi trebalo *@
+    <div class="form-group">
+        <label asp-for="Credits"></label>
+        <input asp-for="Credits" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Semester"></label>
+        <input asp-for="Semester" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Programme"></label>
+        <input asp-for="Programme" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="EducationLevel"></label>
+        <input asp-for="EducationLevel" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="FirstTeacherId"></label>
+        <select asp-for="FirstTeacherId"
+                asp-items="ViewBag.FirstTeacherId"
+                class="form-control"></select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="SecondTeacherId"></label>
+        <select asp-for="SecondTeacherId"
+                asp-items="ViewBag.SecondTeacherId"
+                class="form-control">
+            <option value="">-- None --</option>
+        </select>
+    </div>
+
+
+    <hr />
+
+    @*3b Enrollment *@
+
+    <h4>Students enrollment</h4>
+
+    @* Tabela za site studenti
+       Sekoj red = eden student*@
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Enroll</th>
+                <th>Student</th>
+                <th>Status</th>
+                <th>Grade</th>
+                <th>Repeating</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @* FOR loop MVC vaka ja rekonstruira List<Students>*@
+            @for (int i = 0; i < Model.Students.Count; i++)
+            {
+                <tr>
+                    <td class="text-center">
+                        @* Checkbox – dali studentot e zapisan *@
+                        <input asp-for="Students[i].IsEnrolled" />
+
+                        @* Skrieni polinja – MORA da postojat *@
+                        <input type="hidden" asp-for="Students[i].StudentId" />
+                        <input type="hidden" asp-for="Students[i].FullName" />
+                    </td>
+
+                    @* Prikaz na ime i prezime *@
+                    <td>
+                        @Model.Students[i].FullName
+                    </td>
+
+                    @* Status na enrollment (enum) *@
+                    <td>
+                        <select asp-for="Students[i].Status"
+                                asp-items="Html.GetEnumSelectList<EnrollmentStatus>()"
+                                class="form-control">
+                        </select>
+                    </td>
+
+                    @* Ocenka (moze da bide null) *@
+                    <td>
+                        <input asp-for="Students[i].Grade" class="form-control" />
+                    </td>
+
+                    @* Dali go prezapisal predmetot *@
+                    <td class="text-center">
+                        <input asp-for="Students[i].IsRepeating" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @* SUBMIT button *@
+    <div class="form-group">
+        <input type="submit" value="Save" class="btn btn-primary" />
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</form>
+
+@* VALIDATION SCRIPt *@
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

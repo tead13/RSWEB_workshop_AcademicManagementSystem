@@ -1,0 +1,83 @@
+﻿@model IEnumerable<AcademicManagementSystem.Models.Student>
+
+@{
+    ViewData["Title"] = "Students";
+}
+
+<h1>Students</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+
+<form method="get" class="row g-3 mb-3">
+
+    <div class="col-md-3">
+        <input type="text"
+               name="studentId"
+               value="@Context.Request.Query["studentId"]"
+               class="form-control"
+               placeholder="Index" />
+    </div>
+
+    <div class="col-md-3">
+        <input type="text"
+               name="firstName"
+               value="@Context.Request.Query["firstName"]"
+               class="form-control"
+               placeholder="First name" />
+    </div>
+
+    <div class="col-md-3">
+        <input type="text"
+               name="lastName"
+               value="@Context.Request.Query["lastName"]"
+               class="form-control"
+               placeholder="Last name" />
+    </div>
+
+    <div class="col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+            Filter
+        </button>
+
+        <a asp-action="Index" class="btn btn-secondary">
+            Clear
+        </a>
+    </div>
+
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.StudentId)</th>
+            <th>@Html.DisplayNameFor(model => model.FirstName)</th>
+            <th>@Html.DisplayNameFor(model => model.LastName)</th>
+            <th>@Html.DisplayNameFor(model => model.EnrollmentDate)</th>
+            <th>@Html.DisplayNameFor(model => model.AcquiredCredits)</th>
+            <th>@Html.DisplayNameFor(model => model.CurrentSemestar)</th>
+            <th>@Html.DisplayNameFor(model => model.EducationLevel)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.StudentId</td>
+                <td>@item.FirstName</td>
+                <td>@item.LastName</td>
+                <td>@item.EnrollmentDate?.ToString("dd/MM/yyyy")</td>
+                <td>@item.AcquiredCredits</td>
+                <td>@item.CurrentSemestar</td>
+                <td>@item.EducationLevel</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
