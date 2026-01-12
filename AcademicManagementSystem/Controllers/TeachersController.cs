@@ -8,9 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using AcademicManagementSystem.Data;
 using AcademicManagementSystem.Models;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AcademicManagementSystem.Controllers
 {
+    [Authorize]
     public class TeachersController : Controller
     {
         private readonly ApplicationDbContext _context;

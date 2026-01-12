@@ -16,6 +16,8 @@ namespace AcademicManagementSystem.ViewModels
         public int? SecondTeacherId { get; set; }
 
         // lista od site studenti + enrollment info
-        public List<CourseEnrollmentVM> Students { get; set; } = new List<CourseEnrollmentVM>();
+        /*ova e od faza1 nacin na nrollment vo faza2 ke bide na dr nacin
+         public List<CourseEnrollmentVM> Students { get; set; } = new List<CourseEnrollmentVM>();
+        */
     }
 }

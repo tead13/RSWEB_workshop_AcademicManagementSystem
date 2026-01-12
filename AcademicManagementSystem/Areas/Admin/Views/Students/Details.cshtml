@@ -1,0 +1,165 @@
+﻿@model AcademicManagementSystem.Models.Student
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Student</h4>
+    <hr />
+    
+    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+    {
+        <div class="mb-3">
+            <img src="@Model.ImageUrl"
+                 class="img-thumbnail"
+                 style="max-width:200px;" />
+        </div>
+    }
+
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.StudentId)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.StudentId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.FirstName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.FirstName)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.LastName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.LastName)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.EnrollmentDate)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.EnrollmentDate)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.AcquiredCredits)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.AcquiredCredits)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CurrentSemestar)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CurrentSemestar)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.EducationLevel)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.EducationLevel)
+        </dd>
+    </dl>
+</div>
+
+<hr />
+<h3>Enrolled Courses</h3>
+
+@if (Model.Enrollments != null && Model.Enrollments.Any())
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Course</th>
+                <th>Semester</th>
+                <th>Professor</th>
+                <th>Upload seminar</th>
+                <th>Uploaded file</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var e in Model.Enrollments)
+            {
+                <tr>
+                    <td>@e.Course.Title</td>
+                    <td>@e.Course.Semester</td>
+                    <td>
+                        @e.Course.FirstTeacher?.FirstName
+                        @e.Course.FirstTeacher?.LastName
+                    </td>
+
+                    <!-- Upload -->
+                    <td>
+                        <form asp-action="UploadSeminar"
+                              method="post"
+                              enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden" name="studentId" value="@Model.Id" />
+                            <input type="hidden" name="courseId" value="@e.CourseId" />
+
+                            <input type="file" name="seminarFile"
+                                   accept=".pdf,.doc,.docx"
+                                   required />
+                            <button type="submit"
+                                    class="btn btn-sm btn-primary mt-1">
+                                Upload
+                            </button>
+                        </form>
+                    </td>
+
+                    <!-- Uploaded file -->
+                    <td>
+                        @if (!string.IsNullOrEmpty(e.SeminarUrl))
+                        {
+                            <div>
+                                <a href="@e.SeminarUrl" target="_blank">
+                                     @e.SeminarFileName
+                                </a>
+
+                                <form asp-action="DeleteSeminar"
+                                      method="post"
+                                      style="display:inline;">
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden" name="studentId" value="@Model.Id" />
+                                    <input type="hidden" name="courseId" value="@e.CourseId" />
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-danger ms-2"
+                                            onclick="return confirm('Are you sure you want to delete this file?');">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <span>No file</span>
+                        }
+
+                    </td>
+
+                    <!-- Upload date -->
+                    <td>
+                        @(e.SeminarUploadedAt?.ToString("dd.MM.yyyy HH:mm") ?? "-")
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p><em>No enrolled courses.</em></p>
+}
+
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

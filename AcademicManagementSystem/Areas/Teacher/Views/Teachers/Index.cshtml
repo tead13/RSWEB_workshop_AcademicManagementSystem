@@ -1,0 +1,36 @@
+﻿@model List<AcademicManagementSystem.ViewModels.TeacherCourseListItemVM>
+@{
+    ViewData["Title"] = "My Courses";
+}
+
+<h2>My Courses</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Semester</th>
+            <th>Programme</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td>@c.Title</td>
+                <td>@c.Semester</td>
+                <td>@c.Programme</td>
+                <td>
+                    <a class="btn btn-sm btn-primary"
+                       asp-area="Teacher"
+                       asp-controller="Teacher"
+                       asp-action="Course"
+                       asp-route-id="@c.CourseId">
+                        Open
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

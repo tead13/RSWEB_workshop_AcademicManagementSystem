@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace AcademicManagementSystem.Models
@@ -15,11 +16,12 @@ namespace AcademicManagementSystem.Models
 
         [Required]
         public long StudentId { get; set; }
-
+        //F2: dodavam da se required  semester i year za da moze da funkcioniraat filterite kaj profesorot
+        [Required]
         [StringLength(10)]
-        public string? Semester { get; set; } 
-
-        public int? Year { get; set; }
+        public string Semester { get; set; } = string.Empty;
+        [Required]
+        public int Year { get; set; }
 
         public int? Grade { get; set; }
 

@@ -1,0 +1,134 @@
+﻿@model AcademicManagementSystem.ViewModels.ManageCourseEnrollmentsVM
+
+@{
+    ViewData["Title"] = "Manage Enrollments";
+}
+
+<h2>Manage Enrollments</h2>
+<h4>@Model.CourseTitle</h4>
+
+<form method="get" asp-action="ManageEnrollments" class="row g-2 mb-4">
+    <input type="hidden" name="id" value="@Model.CourseId" />
+
+    <div class="col-md-2">
+        <label class="form-label">Year</label>
+        <input class="form-control" type="number" name="year" value="@Model.Year" />
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Semester</label>
+        <select class="form-select" name="semester">
+            <option value="Winter" selected="@(Model.Semester == "Winter")">Winter</option>
+            <option value="Summer" selected="@(Model.Semester == "Summer")">Summer</option>
+        </select>
+    </div>
+
+    <div class="col-md-3 align-self-end">
+        <button class="btn btn-primary" type="submit">Load</button>
+    </div>
+</form>
+
+<hr />
+
+<h4>Enroll students</h4>
+
+<form method="post" asp-action="EnrollSelected">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="CourseId" />
+    <input type="hidden" asp-for="Year" />
+    <input type="hidden" asp-for="Semester" />
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th style="width:60px;">Select</th>
+                <th>Index</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Students.Count; i++)
+            {
+                <tr>
+                    <td>
+                        <input asp-for="Students[i].Selected" />
+                        <input type="hidden" asp-for="Students[i].StudentId" />
+                        <input type="hidden" asp-for="Students[i].StudentIndex" />
+                        <input type="hidden" asp-for="Students[i].FullName" />
+                    </td>
+                    <td>@Model.Students[i].StudentIndex</td>
+                    <td>@Model.Students[i].FullName</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-success">Enroll selected</button>
+</form>
+
+<hr />
+
+<h4>Deactivate students </h4>
+
+<form method="post" asp-action="DeactivateSelected">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="CourseId" />
+    <input type="hidden" asp-for="Year" />
+    <input type="hidden" asp-for="Semester" />
+
+    <div class="row g-2 mb-3">
+        <div class="col-md-3">
+            <label class="form-label">Finish date</label>
+            <input class="form-control" asp-for="FinishDate" type="date" />
+        </div>
+    </div>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th style="width:60px;">Select</th>
+                <th>Index</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>FinishDate</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Enrolled.Count; i++)
+            {
+                var isInactive = Model.Enrolled[i].Status != AcademicManagementSystem.Models.EnrollmentStatus.Enrolled;
+
+                <tr class="@(isInactive ? "table-secondary text-muted" : "")">
+                    <td>
+                        @if (!isInactive)
+                        {
+                            <input asp-for="Enrolled[i].Selected" />
+                        }
+                        else
+                        {
+                            <span>-</span>
+                        }
+                        <input type="hidden" asp-for="Enrolled[i].EnrollmentId" />
+                    </td>
+
+                    <td>@Model.Enrolled[i].StudentIndex</td>
+
+                    <td class="@(isInactive ? "text-decoration-line-through" : "")">
+                        @Model.Enrolled[i].FullName
+                    </td>
+
+                    <td>@Model.Enrolled[i].Status</td>
+
+                    <td>@(Model.Enrolled[i].FinishDate?.ToString("dd/MM/yyyy") ?? "-")</td>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-warning">Deactivate selected</button>
+</form>
+
+<div class="mt-3">
+    <a asp-action="Details" asp-route-id="@Model.CourseId">Back to Course Details</a>
+</div>

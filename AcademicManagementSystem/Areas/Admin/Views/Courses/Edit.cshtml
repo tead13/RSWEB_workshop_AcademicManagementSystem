@@ -1,5 +1,4 @@
-﻿@* Ovoj View raboti so EditCourseVM, Ne so Course direktno!*@
-@using AcademicManagementSystem.Models
+﻿@* Ovoj View raboti so EditCourseVM, ne so Course direktno *@
 @model AcademicManagementSystem.ViewModels.EditCourseVM
 
 @{
@@ -9,81 +8,68 @@
 <h1>Edit Course</h1>
 <hr />
 
-@* FORM – prakja POST Edit *@
 <form asp-action="Edit" method="post">
-
-    @* Skrieno pole so CourseId, POST Edit go koristi za da znae koj predmet se menuva *@
     <input type="hidden" asp-for="CourseId" />
 
-    @* Prikaz na validaciski greski *@
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-    @* COURSE DATA osnovni info*@
-
-    <div class="form-group">
-        @* Label za Title *@
+    <div class="form-group mb-3">
         <label asp-for="Title" class="control-label"></label>
-
-        @* Input pole za Title *@
         <input asp-for="Title" class="form-control" />
-
-        @* Poraka za validacija *@
         <span asp-validation-for="Title" class="text-danger"></span>
     </div>
 
-    @* Ako gi dodadam vo EditCourseVM i Credits, Semester, Programme isto tak ai tuka bi trebalo *@
-    <div class="form-group">
-        <label asp-for="Credits"></label>
+    <div class="form-group mb-3">
+        <label asp-for="Credits" class="control-label"></label>
         <input asp-for="Credits" class="form-control" />
+        <span asp-validation-for="Credits" class="text-danger"></span>
     </div>
 
-    <div class="form-group">
-        <label asp-for="Semester"></label>
+    <div class="form-group mb-3">
+        <label asp-for="Semester" class="control-label"></label>
         <input asp-for="Semester" class="form-control" />
+        <span asp-validation-for="Semester" class="text-danger"></span>
     </div>
 
-    <div class="form-group">
-        <label asp-for="Programme"></label>
+    <div class="form-group mb-3">
+        <label asp-for="Programme" class="control-label"></label>
         <input asp-for="Programme" class="form-control" />
+        <span asp-validation-for="Programme" class="text-danger"></span>
     </div>
 
-    <div class="form-group">
-        <label asp-for="EducationLevel"></label>
+    <div class="form-group mb-3">
+        <label asp-for="EducationLevel" class="control-label"></label>
         <input asp-for="EducationLevel" class="form-control" />
+        <span asp-validation-for="EducationLevel" class="text-danger"></span>
     </div>
 
-    <div class="form-group">
-        <label asp-for="FirstTeacherId"></label>
+    <div class="form-group mb-3">
+        <label asp-for="FirstTeacherId" class="control-label"></label>
         <select asp-for="FirstTeacherId"
                 asp-items="ViewBag.FirstTeacherId"
-                class="form-control"></select>
+                class="form-control">
+        </select>
+        <span asp-validation-for="FirstTeacherId" class="text-danger"></span>
     </div>
 
-    <div class="form-group">
-        <label asp-for="SecondTeacherId"></label>
+    <div class="form-group mb-4">
+        <label asp-for="SecondTeacherId" class="control-label"></label>
         <select asp-for="SecondTeacherId"
                 asp-items="ViewBag.SecondTeacherId"
                 class="form-control">
             <option value="">-- None --</option>
         </select>
+        <span asp-validation-for="SecondTeacherId" class="text-danger"></span>
     </div>
 
-    <hr />
-
-    @* SUBMIT button *@
     <div class="form-group">
         <input type="submit" value="Save" class="btn btn-primary" />
         <a asp-action="Index" class="btn btn-secondary">Back to List</a>
     </div>
 </form>
 
-@* VALIDATION SCRIPTS *@
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 }
-
-
-
-   

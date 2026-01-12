@@ -1,0 +1,75 @@
+﻿@model AcademicManagementSystem.ViewModels.TeacherCourseDetailsVM
+@{
+    ViewData["Title"] = "Course";
+}
+
+<h2>@Model.Title</h2>
+
+<form method="get" asp-area="Teacher" asp-controller="Teacher" asp-action="Course" class="row g-2 align-items-end mb-3">
+    <input type="hidden" name="id" value="@Model.CourseId" />
+    <div class="col-auto">
+        <label class="form-label">Year</label>
+        <select class="form-select" name="year">
+            @foreach (var y in Model.AvailableYears)
+            {
+                <option value="@y" selected="@(y == Model.SelectedYear)">@y</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-secondary" type="submit">Show</button>
+    </div>
+</form>
+
+<table class="table table-bordered table-sm">
+    <thead>
+        <tr>
+            <th>Index</th>
+            <th>Student</th>
+            <th>Semester</th>
+            <th>Points</th>
+            <th>Grade</th>
+            <th>FinishDate</th>
+            <th>Seminar</th>
+            <th>Project</th>
+            <th>Exam</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var e in Model.Enrollments)
+        {
+            <tr>
+                <td>@e.StudentIndex</td>
+                <td>@e.StudentFullName</td>
+                <td>@e.Semester</td>
+                <td>@(e.Points?.ToString() ?? "-")</td>
+                <td>@(e.Grade?.ToString() ?? "-")</td>
+                <td>@(e.FinishDate?.ToString("yyyy-MM-dd") ?? "-")</td>
+
+                <td>@(string.IsNullOrWhiteSpace(e.SeminarUrl) ? "-" : "OK")</td>
+                <td>@(string.IsNullOrWhiteSpace(e.ProjectUrl) ? "-" : "OK")</td>
+                <td>@(string.IsNullOrWhiteSpace(e.ExamUrl) ? "-" : "OK")</td>
+
+                <td>
+                    @if (e.IsActive)
+                    {
+                        <a class="btn btn-sm btn-warning"
+                           asp-area="Teacher"
+                           asp-controller="Teacher"
+                           asp-action="EditEnrollment"
+                           asp-route-courseId="@e.CourseId"
+                           asp-route-studentId="@e.StudentId"
+                           asp-route-year="@e.Year">
+                            Update
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">inactive</span>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

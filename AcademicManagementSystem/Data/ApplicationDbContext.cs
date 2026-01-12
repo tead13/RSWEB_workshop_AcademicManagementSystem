@@ -1,9 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using AcademicManagementSystem.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace AcademicManagementSystem.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string >
     {
         //ApplicationDbContext EF core, gi povrzuva modelite i bazata 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
@@ -31,14 +33,14 @@ namespace AcademicManagementSystem.Data
                 .WithMany(c => c.Enrollments)
                 .HasForeignKey(e => e.CourseId);
 
-            // Course → FirstTeacher (one-to-many)
+            // Course - FirstTeacher (one-to-many)
             modelBuilder.Entity<Course>()
                 .HasOne(c => c.FirstTeacher)
                 .WithMany(t => t.FirstTeacherCourses)
                 .HasForeignKey(c => c.FirstTeacherId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Course → SecondTeacher (one-to-many)
+            // Course - SecondTeacher (one-to-many)
             modelBuilder.Entity<Course>()
                 .HasOne(c => c.SecondTeacher)
                 .WithMany(t => t.SecondTeacherCourses)

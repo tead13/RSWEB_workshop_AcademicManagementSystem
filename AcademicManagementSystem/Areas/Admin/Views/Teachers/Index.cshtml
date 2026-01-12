@@ -1,0 +1,96 @@
+﻿@model IEnumerable<AcademicManagementSystem.Models.Teacher>
+
+@{
+    ViewData["Title"] = "Teachers";
+}
+
+<h1>Teachers</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+
+<form method="get" class="row g-3 mb-3">
+
+    <div class="col-md-3">
+        <input type="text"
+               name="firstName"
+               value="@Context.Request.Query["firstName"]"
+               class="form-control"
+               placeholder="First name" />
+    </div>
+
+    <div class="col-md-3">
+        <input type="text"
+               name="lastName"
+               value="@Context.Request.Query["lastName"]"
+               class="form-control"
+               placeholder="Last name" />
+    </div>
+
+    <div class="col-md-3">
+        <input type="text"
+               name="degree"
+               value="@Context.Request.Query["degree"]"
+               class="form-control"
+               placeholder="Degree" />
+    </div>
+
+    <div class="col-md-3">
+        <input type="text"
+               name="academicRank"
+               value="@Context.Request.Query["academicRank"]"
+               class="form-control"
+               placeholder="Academic rank" />
+    </div>
+
+    <div class="col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+            Filter
+        </button>
+
+        <a asp-action="Index" class="btn btn-secondary">
+            Clear
+        </a>
+    </div>
+
+</form>
+
+<hr />
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.FirstName)</th>
+            <th>@Html.DisplayNameFor(model => model.LastName)</th>
+            <th>@Html.DisplayNameFor(model => model.Degree)</th>
+            <th>@Html.DisplayNameFor(model => model.AcademicRank)</th>
+            <th>@Html.DisplayNameFor(model => model.OfficeNumber)</th>
+            <th>@Html.DisplayNameFor(model => model.HireDate)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.FirstName</td>
+                <td>@item.LastName</td>
+                <td>@item.Degree</td>
+                <td>@item.AcademicRank</td>
+                <td>@item.OfficeNumber</td>
+                <td>@item.HireDate</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a> |
+                    <a asp-controller="Courses"
+                       asp-action="ByTeacher"
+                       asp-route-teacherId="@item.Id">
+                        View Courses
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
