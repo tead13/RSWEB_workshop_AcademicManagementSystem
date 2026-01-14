@@ -1,0 +1,49 @@
+﻿@model List<AcademicManagementSystem.Models.Enrollment>
+
+@{
+    ViewData["Title"] = "My Courses";
+    var name = ViewBag.StudentName as string ?? "Student";
+}
+
+<h2>Welcome, @name</h2>
+<hr/>
+<br/>
+
+<h4>My enrolled courses</h4>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Course</th>
+            <th>Year</th>
+            <th>Semester</th>
+            <th>Status</th>
+            <th>Total Points</th>
+            <th>Grade</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var e in Model)
+        {
+            var total = (e.SeminarPoints ?? 0) + (e.ProjectPoints ?? 0) + (e.ExamPoints ?? 0);
+            <tr>
+                <td>@e.Course.Title</td>
+                <td>@e.Year</td>
+                <td>@e.Semester</td>
+                <td>@e.Status</td>
+                <td>@total</td>
+                <td>@(e.Grade?.ToString() ?? "-")</td>
+                <td>
+                    <a class="btn btn-sm btn-primary"
+                       asp-area="Student"
+                       asp-controller="Student"
+                       asp-action="Course"
+                       asp-route-id="@e.Id">
+                        View more
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

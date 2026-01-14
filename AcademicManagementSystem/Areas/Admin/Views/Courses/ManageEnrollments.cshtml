@@ -130,5 +130,8 @@
 </form>
 
 <div class="mt-3">
-    <a asp-action="Details" asp-route-id="@Model.CourseId">Back to Course Details</a>
+    <a asp-area="Admin" asp-controller="Courses" asp-action="Index">Back to Courses</a>
+    <span class="mx-2">|</span>
+    <a asp-area="Admin" asp-controller="Courses" asp-action="Details" asp-route-id="@Model.CourseId">Back to Course Details</a>
 </div>
+

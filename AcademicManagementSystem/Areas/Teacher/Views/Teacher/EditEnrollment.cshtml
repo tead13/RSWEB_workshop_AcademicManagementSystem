@@ -1,0 +1,93 @@
+﻿@model AcademicManagementSystem.ViewModels.TeacherEnrollmentEditVM
+
+@{
+    ViewData["Title"] = "Update Enrollment";
+}
+
+<h2>Update Enrollment</h2>
+<p>
+    <strong>@Model.StudentFullName</strong> (@Model.StudentIndex)
+</p>
+
+<form asp-area="Teacher" asp-controller="Teacher" asp-action="EditEnrollment" method="post">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" asp-for="EnrollmentId" />
+    <input type="hidden" asp-for="CourseId" />
+    <input type="hidden" asp-for="Year" />
+
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <label asp-for="SeminarPoints" class="form-label"></label>
+            <input asp-for="SeminarPoints" class="form-control" />
+            <span asp-validation-for="SeminarPoints" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <label asp-for="ProjectPoints" class="form-label"></label>
+            <input asp-for="ProjectPoints" class="form-control" />
+            <span asp-validation-for="ProjectPoints" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <label asp-for="ExamPoints" class="form-label"></label>
+            <input asp-for="ExamPoints" class="form-control" />
+            <span asp-validation-for="ExamPoints" class="text-danger"></span>
+        </div>
+
+    </div>
+
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <label asp-for="Grade" class="form-label"></label>
+            <input asp-for="Grade" class="form-control" />
+            <span asp-validation-for="Grade" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="FinishDate" class="form-label"></label>
+            <input asp-for="FinishDate" class="form-control" />
+            <span asp-validation-for="FinishDate" class="text-danger"></span>
+            <div class="form-text">If you set FinishDate, student will be inactive.</div>
+        </div>
+    </div>
+
+    <hr />
+    <h5>Submitted files (read-only)</h5>
+
+    <div class="mb-2">
+        <label class="form-label">Seminar URL</label><br />
+        @if (!string.IsNullOrWhiteSpace(Model.SeminarUrl))
+        {
+            <a href="@Model.SeminarUrl" target="_blank">Open seminar</a>
+        }
+        else
+        {
+            <span>-</span>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Project URL</label><br />
+        @if (!string.IsNullOrWhiteSpace(Model.ProjectUrl))
+        {
+            <a href="@Model.ProjectUrl" target="_blank">Open project</a>
+        }
+        else
+        {
+            <span>-</span>
+        }
+    </div>
+
+    <button class="btn btn-primary" type="submit">Save</button>
+    <a class="btn btn-secondary"
+       asp-area="Teacher"
+       asp-controller="Teacher"
+       asp-action="Course"
+       asp-route-id="@Model.CourseId"
+       asp-route-year="@Model.Year">Back to course</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

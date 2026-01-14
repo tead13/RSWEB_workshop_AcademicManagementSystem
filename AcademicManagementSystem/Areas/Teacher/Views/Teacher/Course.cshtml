@@ -1,0 +1,102 @@
+﻿@model AcademicManagementSystem.ViewModels.TeacherCourseDetailsVM
+@{
+    ViewData["Title"] = "Course";
+}
+
+<h2>@Model.Title</h2>
+
+<form method="get" asp-area="Teacher" asp-controller="Teacher" asp-action="Course" class="row g-2 align-items-end mb-3">
+    <input type="hidden" name="id" value="@Model.CourseId" />
+    <div class="col-auto">
+        <label class="form-label">Enrolled in
+            <select class="form-select" name="year">
+                @foreach (var y in Model.AvailableYears)
+                {
+                    <option value="@y" selected="@(y == Model.SelectedYear)">@y</option>
+                }
+            </select>
+        </label>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-secondary" type="submit">Show</button>
+    </div>
+</form>
+
+<table class="table table-bordered table-sm">
+    <thead>
+        <tr>
+            <th>Index</th>
+            <th>Student</th>
+            <th>Semester</th>
+            <th>Seminar URL</th>
+            <th>Project URL</th>
+            <th>Seminar Points</th>
+            <th>Project Points</th>
+            <th>Exam Points</th>
+            <th>Points</th>
+            <th>Grade</th>
+            <th>FinishDate</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var e in Model.Enrollments)
+        {
+            <tr>
+                <td>@e.StudentIndex</td>
+                <td>@e.StudentFullName</td>
+                <td>@e.Semester</td>
+
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(e.SeminarUrl))
+                    {
+                        <a href="@e.SeminarUrl" target="_blank">Open</a>
+                    }
+                    else
+                    {
+
+                        <span>-</span>
+                    }
+                </td>
+
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(e.ProjectUrl))
+                    {
+                        <a href="@e.ProjectUrl" target="_blank">Open</a>
+                    }
+                    else
+                    {
+
+                        <span>-</span>
+                    }
+                </td>
+
+                <td>@(e.SeminarPoints?.ToString() ?? "-")</td>
+                <td>@(e.ProjectPoints?.ToString() ?? "-")</td>
+                <td>@(e.ExamPoints?.ToString() ?? "-")</td>
+
+                <td>@e.Points</td>
+                <td>@(e.Grade?.ToString() ?? "-")</td>
+                <td>@(e.FinishDate?.ToString("dd/MM/yyyy") ?? "-")</td>
+
+                <td>
+                    @if (e.IsActive)
+                    {
+                        <a class="btn btn-sm btn-warning"
+                           asp-area="Teacher"
+                           asp-controller="Teacher"
+                           asp-action="EditEnrollment"
+                           asp-route-id="@e.EnrollmentId">
+                            Update
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">inactive</span>
+                    }
+                </td>
+
+            </tr>
+        }
+    </tbody>
+</table>

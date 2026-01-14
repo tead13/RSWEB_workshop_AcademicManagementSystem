@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace AcademicManagementSystem.Controllers
 {
-    [Authorize]
+    //[Authorize(Roles = "Admin")]
     public class TeachersController : Controller
     {
         private readonly ApplicationDbContext _context;

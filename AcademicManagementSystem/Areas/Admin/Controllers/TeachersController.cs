@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AcademicManagementSystem.Data;
+using AcademicManagementSystem.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,18 +22,26 @@ namespace AcademicManagementSystem.Areas.Admin.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
 
-        public TeachersController(ApplicationDbContext context, IWebHostEnvironment env)
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+
+        private const string TeacherEmailDomain = "@profesor.edu.com";
+        private const string TempTeacherPassword = "Teacher123!";
+
+        public TeachersController(
+            ApplicationDbContext context,
+            IWebHostEnvironment env,
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager)
         {
             _context = context;
             _env = env;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
 
         // GET: Admin/Teachers
-        public async Task<IActionResult> Index(
-            string firstName,
-            string lastName,
-            string degree,
-            string academicRank)
+        public async Task<IActionResult> Index(string firstName, string lastName, string degree, string academicRank)
         {
             var teachers = _context.Teachers.AsQueryable();
 
@@ -56,12 +65,9 @@ namespace AcademicManagementSystem.Areas.Admin.Controllers
         {
             if (id == null) return NotFound();
 
-            var teacher = await _context.Teachers
-                .FirstOrDefaultAsync(t => t.Id == id);
-
+            var teacher = await _context.Teachers.FirstOrDefaultAsync(t => t.Id == id);
             if (teacher == null) return NotFound();
 
-            // Courses that this teacher teaches
             var courses = await _context.Courses
                 .Where(c => c.FirstTeacherId == id || c.SecondTeacherId == id)
                 .ToListAsync();
@@ -82,10 +88,18 @@ namespace AcademicManagementSystem.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(TeacherModel teacher)
         {
+            // Extra validation: email must end with @profesor.edu.com
+            if (!string.IsNullOrWhiteSpace(teacher.Email))
+            {
+                var email = teacher.Email.Trim().ToLower();
+                if (!email.EndsWith(TeacherEmailDomain))
+                    ModelState.AddModelError(nameof(teacher.Email), $"Email мора да завршува на {TeacherEmailDomain}");
+            }
+
             if (!ModelState.IsValid)
                 return View(teacher);
 
-            // PROFILE IMAGE UPLOAD
+            // ===== PROFILE IMAGE UPLOAD =====
             if (teacher.ProfileImage != null && teacher.ProfileImage.Length > 0)
             {
                 var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "teachers");
@@ -100,8 +114,54 @@ namespace AcademicManagementSystem.Areas.Admin.Controllers
                 teacher.ImageUrl = "/uploads/teachers/" + fileName;
             }
 
+            // Save Teacher to DB first (so we have teacher.Id)
             _context.Add(teacher);
             await _context.SaveChangesAsync();
+
+            // ===== CREATE/UPDATE IDENTITY USER FOR THIS TEACHER =====
+            await EnsureTeacherRoleAsync();
+
+            var normalizedEmail = teacher.Email?.Trim().ToLower();
+            if (!string.IsNullOrWhiteSpace(normalizedEmail))
+            {
+                var user = await _userManager.FindByEmailAsync(normalizedEmail);
+
+                if (user == null)
+                {
+                    user = new ApplicationUser
+                    {
+                        UserName = normalizedEmail,
+                        Email = normalizedEmail,
+                        EmailConfirmed = true,
+                        TeacherId = teacher.Id
+                    };
+
+                    var createResult = await _userManager.CreateAsync(user, TempTeacherPassword);
+                    if (!createResult.Succeeded)
+                    {
+                        foreach (var err in createResult.Errors)
+                            ModelState.AddModelError("", err.Description);
+
+                        // Rollback Teacher (optional). For speed we just show errors.
+                        return View(teacher);
+                    }
+
+                    await _userManager.AddToRoleAsync(user, "Teacher");
+
+                    TempData["TempPassword"] =
+                        $"Teacher login created: {normalizedEmail}  Password: {TempTeacherPassword}";
+                }
+                else
+                {
+                    // user exists -> ensure role + link teacher id
+                    user.TeacherId = teacher.Id;
+                    await _userManager.UpdateAsync(user);
+
+                    if (!await _userManager.IsInRoleAsync(user, "Teacher"))
+                        await _userManager.AddToRoleAsync(user, "Teacher");
+                }
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -123,12 +183,20 @@ namespace AcademicManagementSystem.Areas.Admin.Controllers
         {
             if (id != teacher.Id) return NotFound();
 
+            // Extra validation: email must end with @profesor.edu.com
+            if (!string.IsNullOrWhiteSpace(teacher.Email))
+            {
+                var email = teacher.Email.Trim().ToLower();
+                if (!email.EndsWith(TeacherEmailDomain))
+                    ModelState.AddModelError(nameof(teacher.Email), $"Email мора да завршува на {TeacherEmailDomain}");
+            }
+
             if (!ModelState.IsValid)
                 return View(teacher);
 
             try
             {
-                // PROFILE IMAGE UPLOAD (IF NEW IMAGE SELECTED)
+                // ===== PROFILE IMAGE UPLOAD (IF NEW IMAGE SELECTED) =====
                 if (teacher.ProfileImage != null && teacher.ProfileImage.Length > 0)
                 {
                     var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "teachers");
@@ -155,6 +223,23 @@ namespace AcademicManagementSystem.Areas.Admin.Controllers
 
                 _context.Update(teacher);
                 await _context.SaveChangesAsync();
+
+                // Optionally sync Identity email/TeacherId if email changed
+                await EnsureTeacherRoleAsync();
+
+                var normalizedEmail = teacher.Email?.Trim().ToLower();
+                if (!string.IsNullOrWhiteSpace(normalizedEmail))
+                {
+                    var user = await _userManager.FindByEmailAsync(normalizedEmail);
+                    if (user != null)
+                    {
+                        user.TeacherId = teacher.Id;
+                        await _userManager.UpdateAsync(user);
+
+                        if (!await _userManager.IsInRoleAsync(user, "Teacher"))
+                            await _userManager.AddToRoleAsync(user, "Teacher");
+                    }
+                }
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -172,9 +257,7 @@ namespace AcademicManagementSystem.Areas.Admin.Controllers
         {
             if (id == null) return NotFound();
 
-            var teacher = await _context.Teachers
-                .FirstOrDefaultAsync(m => m.Id == id);
-
+            var teacher = await _context.Teachers.FirstOrDefaultAsync(m => m.Id == id);
             if (teacher == null) return NotFound();
 
             return View(teacher);
@@ -196,6 +279,12 @@ namespace AcademicManagementSystem.Areas.Admin.Controllers
         private bool TeacherExists(int id)
         {
             return _context.Teachers.Any(e => e.Id == id);
+        }
+
+        private async Task EnsureTeacherRoleAsync()
+        {
+            if (!await _roleManager.RoleExistsAsync("Teacher"))
+                await _roleManager.CreateAsync(new IdentityRole("Teacher"));
         }
     }
 }

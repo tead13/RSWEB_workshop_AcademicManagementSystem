@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AcademicManagementSystem.Controllers
 {
-    [Authorize]    
+    //[Authorize(Roles = "Admin")]    
     public class StudentsController : Controller
     {
         private readonly ApplicationDbContext _context;

@@ -57,30 +57,30 @@
     </dl>
 </div>
 
-<h4>Enrolled Students</h4>
+@{
+    var active = ViewBag.ActiveEnrollments as List<AcademicManagementSystem.Models.Enrollment>;
+}
 
-@if (Model.Enrollments.Any())
+<h4>Currently on the course</h4>
+
+@if (ViewBag.CurrentStudents != null && ((List<AcademicManagementSystem.Models.Student>)ViewBag.CurrentStudents).Any())
 {
     <ul>
-        @foreach (var e in Model.Enrollments)
+        @foreach (var s in (List<AcademicManagementSystem.Models.Student>)ViewBag.CurrentStudents)
         {
-            <li>
-                @e.Student.StudentId -
-                @e.Student.FullName
-            </li>
+            <li>@s.StudentId - @s.FirstName @s.LastName</li>
         }
     </ul>
 }
 else
 {
-    <p>No enrolled students.</p>
+    <p><em>No currently enrolled students.</em></p>
 }
 
 
 
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="ManageEnrollments" asp-route-id="@Model.Id">Manage Enrollments</a> |
     <a asp-action="Index">Back to List</a>
 </div>
-
-<a asp-action="ManageEnrollments" asp-route-id="@Model.Id">Manage Enrollments</a> |

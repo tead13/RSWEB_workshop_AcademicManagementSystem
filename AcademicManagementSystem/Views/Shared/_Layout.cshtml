@@ -44,26 +44,26 @@
                         else if (User.IsInRole("Teacher"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-area="Teacher"
-                                   asp-controller="Teacher"
-                                   asp-action="Index">
-                                    My Courses
-                                </a>
+                                <a class="nav-link text-dark" asp-area="Teacher" asp-controller="Teacher" asp-action="Index">My Courses</a>
                             </li>
                         }
+                        else if (User.IsInRole("Student"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="Student" asp-controller="Student" asp-action="Index">My Courses</a>
+                            </li>
+                        }
+
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Courses" asp-action="Index">Courses</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Students" asp-action="Index">Students</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Teachers" asp-action="Index">Teachers</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                             </li>
                         }
+
                     </ul>
 
                     <!-- Right side auth links -->

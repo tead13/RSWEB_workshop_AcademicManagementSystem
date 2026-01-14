@@ -17,6 +17,11 @@ namespace AcademicManagementSystem.Models
         [StringLength(50)]
         public string LastName { get; set; } = string.Empty;
 
+        [Required]
+        [EmailAddress]
+        [RegularExpression(@".+@profesor\.edu\.com$", ErrorMessage = "Email мора да завршува на @profesor.edu.com")]
+        public string Email { get; set; } = "";
+
         [StringLength(50)]
         public string? Degree { get; set; } 
 

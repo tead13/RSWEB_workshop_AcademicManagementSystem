@@ -58,6 +58,12 @@
 
 <hr />
 
+@if (TempData["TempPassword"] != null)
+{
+    <div class="alert alert-success">@TempData["TempPassword"]</div>
+}
+
+
 <table class="table table-striped">
     <thead>
         <tr>

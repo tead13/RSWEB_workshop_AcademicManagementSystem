@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AcademicManagementSystem.Controllers
 {
-    [Authorize] // ако сакаш да биде јавно, избриши го ова
+    //[Authorize(Roles = "Admin")] 
     public class CoursesController : Controller
     {
         private readonly ApplicationDbContext _context;

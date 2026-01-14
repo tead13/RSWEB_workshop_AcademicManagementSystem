@@ -1,0 +1,205 @@
+﻿@model AcademicManagementSystem.Models.Enrollment
+
+@{
+    ViewData["Title"] = "Course details";
+    var total = (Model.SeminarPoints ?? 0) + (Model.ProjectPoints ?? 0) + (Model.ExamPoints ?? 0);
+
+    // teachers text: "Name1, Name2"
+    var teachers = "";
+    if (Model.Course?.FirstTeacher != null)
+        teachers = Model.Course.FirstTeacher.FullName;
+
+    if (Model.Course?.SecondTeacher != null)
+        teachers = string.IsNullOrWhiteSpace(teachers)
+            ? Model.Course.SecondTeacher.FullName
+            : teachers + ", " + Model.Course.SecondTeacher.FullName;
+}
+
+<h2>Course: @Model.Course.Title</h2>
+
+@if (!string.IsNullOrWhiteSpace(teachers))
+{
+    <div class="text-muted" style="margin-top:-6px;">
+        lectured by @teachers
+    </div>
+}
+
+<hr />
+
+<h4>Your status for this course</h4>
+
+<dl class="row">
+    <dt class="col-sm-3">Year</dt>
+    <dd class="col-sm-9">@Model.Year</dd>
+
+    <dt class="col-sm-3">Semester</dt>
+    <dd class="col-sm-9">@Model.Semester</dd>
+
+    <dt class="col-sm-3">Status</dt>
+    <dd class="col-sm-9">@Model.Status</dd>
+
+    <dt class="col-sm-3">Total points</dt>
+    <dd class="col-sm-9">@total</dd>
+
+    <dt class="col-sm-3">Grade</dt>
+    <dd class="col-sm-9">@(Model.Grade?.ToString() ?? "-")</dd>
+
+    <dt class="col-sm-3">Finish date</dt>
+    <dd class="col-sm-9">@(Model.FinishDate?.ToString("dd/MM/yyyy") ?? "-")</dd>
+</dl>
+
+<hr />
+
+
+<h3>Submissions</h3>
+<p><em>You can upload you seminar or project here</em></p>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<table class="table table-bordered align-middle">
+    <thead>
+        <tr>
+            <th style="width:140px;">Type</th>
+            <th>Upload</th>
+            <th style="width:220px;">Submitted</th>
+            <th style="width:120px;">Points</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- SEMINAR ROW -->
+        <tr>
+            <td>
+                <strong>Seminar</strong><br />
+                <small class="text-muted">doc, docx, pdf</small>
+            </td>
+
+            <td>
+                @if (string.IsNullOrWhiteSpace(Model.SeminarUrl))
+                {
+                    <form asp-area="Student" asp-controller="Student" asp-action="UploadSeminar"
+                          asp-route-id="@Model.Id" method="post" enctype="multipart/form-data"
+                          class="d-flex gap-2">
+                        @Html.AntiForgeryToken()
+                        <input type="file" name="seminarFile"
+                               class="form-control"
+                               accept=".pdf,.doc,.docx" />
+                        <button class="btn btn-primary btn-sm" type="submit">Upload</button>
+                    </form>
+                }
+                else
+                {
+                    <span class="text-muted">Uploaded</span>
+                }
+            </td>
+
+            <td>
+                @if (!string.IsNullOrWhiteSpace(Model.SeminarUrl))
+                {
+                    
+                        string displayName = "Open file";
+                        if (!string.IsNullOrWhiteSpace(Model.SeminarUrl))
+                        {
+                            var parts = Model.SeminarUrl.Split('?');
+                            if (parts.Length > 1)
+                            {
+                                var query = parts[1];
+                                
+                                var namePart = query.Split('&').FirstOrDefault(x => x.StartsWith("name="));
+                                if (namePart != null)
+                                {
+                                    displayName = Uri.UnescapeDataString(namePart.Substring("name=".Length));
+                                }
+                            }
+                            else
+                            {
+                                displayName = System.IO.Path.GetFileName(parts[0]);
+                            }
+                        }
+                    
+
+                    <a href="@Model.SeminarUrl" target="_blank">@displayName</a>
+
+
+
+                    <form asp-area="Student" asp-controller="Student" asp-action="DeleteSeminar"
+                          asp-route-id="@Model.Id" method="post"
+                          style="display:inline;">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-outline-danger btn-sm">Delete</button>
+                    </form>
+                }
+                else
+                {
+                    <span class="text-muted">No file</span>
+                }
+            </td>
+
+            <td>
+                @(Model.SeminarPoints?.ToString() ?? "-")
+            </td>
+        </tr>
+
+
+        <!-- PROJECT ROW -->
+        <tr>
+            <td>
+                <strong>Project</strong><br />
+                <small class="text-muted">GitHub repo link</small>
+            </td>
+
+            <td>
+                @if (string.IsNullOrWhiteSpace(Model.ProjectUrl))
+                {
+                    <form asp-area="Student" asp-controller="Student" asp-action="UpdateProjectUrl"
+                          asp-route-id="@Model.Id" method="post"
+                          class="d-flex gap-2">
+                        @Html.AntiForgeryToken()
+                        <input type="text" name="projectUrl"
+                               class="form-control"
+                               placeholder="https://github.com/user/repo" />
+                        <button class="btn btn-primary btn-sm" type="submit">Save</button>
+                    </form>
+                }
+                else
+                {
+                    <span class="text-muted">Saved</span>
+                }
+            </td>
+
+            <td>
+                @if (!string.IsNullOrWhiteSpace(Model.ProjectUrl))
+                {
+                    <a href="@Model.ProjectUrl" target="_blank">@Model.ProjectUrl</a>
+
+                    <form asp-area="Student" asp-controller="Student" asp-action="DeleteProjectUrl"
+                          asp-route-id="@Model.Id" method="post"
+                          style="display:inline;">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-outline-danger btn-sm">Delete</button>
+                    </form>
+                }
+                else
+                {
+                    <span class="text-muted">No link</span>
+                }
+            </td>
+
+            <td>
+                @(Model.ProjectPoints?.ToString() ?? "-")
+            </td>
+        </tr>
+
+    </tbody>
+</table>
+
+<a class="btn btn-secondary"
+   asp-area="Student"
+   asp-controller="Student"
+   asp-action="Index">Back</a>

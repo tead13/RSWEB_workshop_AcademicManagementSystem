@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using AcademicManagementSystem.Data;
+using AcademicManagementSystem.Models;
 using AcademicManagementSystem.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -15,9 +16,9 @@ namespace AcademicManagementSystem.Areas.Teacher.Controllers
     public class TeacherController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public TeacherController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
+        public TeacherController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;
@@ -26,8 +27,15 @@ namespace AcademicManagementSystem.Areas.Teacher.Controllers
         // GET: /Teacher/Teacher
         public async Task<IActionResult> Index()
         {
-            var teacher = await GetCurrentTeacherAsync();
-            if (teacher == null) return Forbid();
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.TeacherId == null)
+                return Forbid();
+
+            var teacher = await _context.Teachers
+                .FirstOrDefaultAsync(t => t.Id == user.TeacherId.Value);
+
+            if (teacher == null)
+                return Forbid();
 
             var courses = await _context.Courses
                 .Where(c => c.FirstTeacherId == teacher.Id || c.SecondTeacherId == teacher.Id)
@@ -41,19 +49,27 @@ namespace AcademicManagementSystem.Areas.Teacher.Controllers
                 })
                 .ToListAsync();
 
-            return View(courses);
+            var vm = new TeacherHomeVM
+            {
+                TeacherFullName = $"{teacher.FirstName} {teacher.LastName}",
+                Courses = courses
+            };
+
+            return View(vm);
         }
 
-        // GET: /Teacher/Teacher/Course/5?year=2024
+        // GET: /Teacher/Teacher/Course/1?year=2026
         public async Task<IActionResult> Course(int id, int? year)
         {
-            var teacher = await GetCurrentTeacherAsync();
-            if (teacher == null) return Forbid();
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.TeacherId == null) return Forbid();
+            int teacherId = user.TeacherId.Value;
 
             var course = await _context.Courses.FirstOrDefaultAsync(c => c.Id == id);
             if (course == null) return NotFound();
 
-            if (!(course.FirstTeacherId == teacher.Id || course.SecondTeacherId == teacher.Id))
+            //moze da gi videi samo smoite predmeti
+            if (!(course.FirstTeacherId == teacherId || course.SecondTeacherId == teacherId))
                 return Forbid();
 
             var years = await _context.Enrollments
@@ -63,7 +79,7 @@ namespace AcademicManagementSystem.Areas.Teacher.Controllers
                 .OrderByDescending(y => y)
                 .ToListAsync();
 
-            int selectedYear = year ?? (years.FirstOrDefault() == 0 ? DateTime.Now.Year : years.FirstOrDefault());
+            int selectedYear = year ?? (years.Count > 0 ? years[0] : DateTime.Now.Year);
 
             var enrollments = await _context.Enrollments
                 .Include(e => e.Student)
@@ -72,23 +88,31 @@ namespace AcademicManagementSystem.Areas.Teacher.Controllers
                 .ThenBy(e => e.Student.FirstName)
                 .Select(e => new TeacherEnrollmentRowVM
                 {
+                    EnrollmentId = e.Id,
                     CourseId = e.CourseId,
-                    StudentId = e.StudentId,
                     Year = e.Year,
 
-                    StudentIndex = e.Student.Index,
-                    StudentFullName = e.Student.FirstName + " " + e.Student.LastName,
+                    StudentIndex = e.Student.StudentId,
+                    StudentFullName = e.Student.FullName,
 
                     Semester = e.Semester,
-                    Points = e.Points,
-                    Grade = e.Grade,
-                    FinishDate = e.FinishDate,
 
                     SeminarUrl = e.SeminarUrl,
                     ProjectUrl = e.ProjectUrl,
-                    ExamUrl = e.ExamUrl,
 
-                    IsActive = e.FinishDate == null
+                    SeminarPoints = e.SeminarPoints,
+                    ProjectPoints = e.ProjectPoints,
+                    ExamPoints = e.ExamPoints,
+
+                    // Total points ke bidat prikazani "Points" i ke se zbir od site
+                    Points = (e.ExamPoints ?? 0)
+                           + (e.SeminarPoints ?? 0)
+                           + (e.ProjectPoints ?? 0),
+
+                    Grade = e.Grade,
+                    FinishDate = e.FinishDate,
+
+                    IsActive = e.FinishDate == null && e.Status == EnrollmentStatus.Enrolled
                 })
                 .ToListAsync();
 
@@ -104,41 +128,42 @@ namespace AcademicManagementSystem.Areas.Teacher.Controllers
             return View(vm);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> EditEnrollment(int courseId, int studentId, int year)
+        // GET: /Teacher/Teacher/EditEnrollment/5
+        public async Task<IActionResult> EditEnrollment(long id)
         {
-            var teacher = await GetCurrentTeacherAsync();
-            if (teacher == null) return Forbid();
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.TeacherId == null) return Forbid();
+            int teacherId = user.TeacherId.Value;
 
-            var course = await _context.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
-            if (course == null) return NotFound();
+            var enrollment = await _context.Enrollments
+                .Include(e => e.Student)
+                .Include(e => e.Course)
+                .FirstOrDefaultAsync(e => e.Id == id);
 
-            if (!(course.FirstTeacherId == teacher.Id || course.SecondTeacherId == teacher.Id))
+            if (enrollment == null) return NotFound();
+
+            //prof smee da menuva samo svoi predmeti
+            if (!(enrollment.Course.FirstTeacherId == teacherId || enrollment.Course.SecondTeacherId == teacherId))
                 return Forbid();
-
-            var e = await _context.Enrollments
-                .Include(x => x.Student)
-                .FirstOrDefaultAsync(x => x.CourseId == courseId && x.StudentId == studentId && x.Year == year);
-
-            if (e == null) return NotFound();
-            if (e.FinishDate != null) return Forbid(); // only active
 
             var vm = new TeacherEnrollmentEditVM
             {
-                CourseId = e.CourseId,
-                StudentId = e.StudentId,
-                Year = e.Year,
+                EnrollmentId = enrollment.Id,
+                CourseId = enrollment.CourseId,
+                Year = enrollment.Year,
 
-                StudentIndex = e.Student.Index,
-                StudentFullName = e.Student.FirstName + " " + e.Student.LastName,
+                StudentIndex = enrollment.Student.StudentId,
+                StudentFullName = enrollment.Student.FirstName + " " + enrollment.Student.LastName,
 
-                Points = e.Points,
-                Grade = e.Grade,
-                FinishDate = e.FinishDate,
+                SeminarUrl = enrollment.SeminarUrl,
+                ProjectUrl = enrollment.ProjectUrl,
 
-                SeminarUrl = e.SeminarUrl,
-                ProjectUrl = e.ProjectUrl,
-                ExamUrl = e.ExamUrl
+                SeminarPoints = enrollment.SeminarPoints,
+                ProjectPoints = enrollment.ProjectPoints,
+                ExamPoints = enrollment.ExamPoints,
+                
+                Grade = enrollment.Grade,
+                FinishDate = enrollment.FinishDate
             };
 
             return View(vm);
@@ -148,45 +173,38 @@ namespace AcademicManagementSystem.Areas.Teacher.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditEnrollment(TeacherEnrollmentEditVM vm)
         {
-            var teacher = await GetCurrentTeacherAsync();
-            if (teacher == null) return Forbid();
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.TeacherId == null) return Forbid();
+            int teacherId = user.TeacherId.Value;
 
-            var course = await _context.Courses.FirstOrDefaultAsync(c => c.Id == vm.CourseId);
-            if (course == null) return NotFound();
+            var enrollment = await _context.Enrollments
+                .Include(e => e.Course)
+                .FirstOrDefaultAsync(e => e.Id == vm.EnrollmentId);
 
-            if (!(course.FirstTeacherId == teacher.Id || course.SecondTeacherId == teacher.Id))
+            if (enrollment == null) return NotFound();
+
+            if (!(enrollment.Course.FirstTeacherId == teacherId || enrollment.Course.SecondTeacherId == teacherId))
                 return Forbid();
-
-            var e = await _context.Enrollments
-                .FirstOrDefaultAsync(x => x.CourseId == vm.CourseId && x.StudentId == vm.StudentId && x.Year == vm.Year);
-
-            if (e == null) return NotFound();
-            if (e.FinishDate != null) return Forbid();
 
             if (!ModelState.IsValid)
                 return View(vm);
 
-            e.Points = vm.Points;
-            e.Grade = vm.Grade;
-            e.FinishDate = vm.FinishDate;
+            // Teacher updates
+            enrollment.SeminarPoints = vm.SeminarPoints;
+            enrollment.ProjectPoints = vm.ProjectPoints;
+            enrollment.ExamPoints = vm.ExamPoints;
+            
+            enrollment.Grade = vm.Grade;
+            enrollment.FinishDate = vm.FinishDate;
+
+            // ako vneseme finish date - vise ne e "active"
+            if (enrollment.FinishDate != null && enrollment.Status == EnrollmentStatus.Enrolled)
+                enrollment.Status = EnrollmentStatus.Completed;
 
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Course), new { id = vm.CourseId, year = vm.Year });
-        }
 
-        private async Task<AcademicManagementSystem.Models.Teacher?> GetCurrentTeacherAsync()
-        {
-            // 1) ако имаш Teacher.ApplicationUserId
-            var userId = _userManager.GetUserId(User);
-            var t = await _context.Teachers.FirstOrDefaultAsync(x => x.ApplicationUserId == userId);
-            if (t != null) return t;
-
-            // 2) fallback ако имаш Teacher.Email
-            var email = User?.Identity?.Name;
-            if (!string.IsNullOrWhiteSpace(email))
-                return await _context.Teachers.FirstOrDefaultAsync(x => x.Email == email);
-
-            return null;
+            //vrakjanje nazad na istiot predmet i ista godina izberena
+            return RedirectToAction("Course", new { area = "Teacher", id = enrollment.CourseId, year = enrollment.Year });
         }
     }
 }

@@ -62,6 +62,21 @@ namespace AcademicManagementSystem.Areas.Admin.Controllers
 
             if (course == null) return NotFound();
 
+            //da gi prikazuva samo momentalno zapisanite studenti 
+            var activeEnrollments = await _context.Enrollments
+                .Include(e => e.Student)
+                .Where(e => e.CourseId == id
+                            && e.Status == EnrollmentStatus.Enrolled
+                            && e.FinishDate == null)
+                .OrderBy(e => e.Student.StudentId)
+                .ToListAsync();
+
+            ViewBag.ActiveEnrollments = activeEnrollments;
+
+            ViewBag.CurrentStudents = activeEnrollments
+                .Select(e => e.Student)
+                .ToList();
+
             return View(course);
         }
 
@@ -284,7 +299,7 @@ namespace AcademicManagementSystem.Areas.Admin.Controllers
             foreach (var e in enrollments)
             {
                 e.FinishDate = finish;
-                e.Status = EnrollmentStatus.Dropped; // деактивиран/отпишан
+                e.Status = EnrollmentStatus.Dropped; 
             }
 
             await _context.SaveChangesAsync();
